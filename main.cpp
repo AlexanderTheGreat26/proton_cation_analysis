@@ -44,6 +44,8 @@ frames selection_oxygens (std::vector<data_tuple> & coordinates, const int & ato
 std::vector<double> distances_in_frame (frame & atoms);
 
 
+std::vector<std::pair<int, double>> histogram (std::vector<double> & groups_borders, std::vector<double> & distances);
+
 
 int main() {
     int data_files_count = fromString<int>(exec("find ./base_p-1.pos -type f | wc -l"));
@@ -55,6 +57,10 @@ int main() {
         distances_in_frames.emplace_back(distances_in_frame(oxygen_frame));
     }
 
+
+
+    for (int i = 0; i < distances_in_frames.size(); ++i)
+        histogram(borders, distances_in_frame);
 
 
 }
@@ -125,12 +131,13 @@ std::vector<double> distances_in_frame (frame & atoms) {
 // Before start dist analyze, find maximum for scaling, otherwise use small scale. Of course, we need just two distances
 // intervals, but we can do it more useful.
 // Anyway it doesn't matter in this function.
-std::vector<std::pair<int, int>> histogram (std::vector<double> & groups_borders, std::vector<double> & distances) {
-    std::vector<std::pair<int, int>> result;
-    for (int i = 0; i < distances.size(); ++i)
+std::vector<std::pair<int, double>> histogram (std::vector<double> & groups_borders, std::vector<double> & distances) {
+    std::vector<std::pair<int, double>> result (groups_borders.size()-1);
+    for (double distance : distances)
         for (int j = 0; j < groups_borders.size()-1; ++j)
-            if (distances[i] >= groups_borders[j] && distances[i] <= groups_borders[j+1])
-                result.emplace_back(j, i); // rewrite this shit
+            if (distance >= groups_borders[j] && distance <= groups_borders[j+1])
+                ++result[j].second;
+    for (auto & i : result) i.second /= double(distances.size());
     return result;
 }
 
